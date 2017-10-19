@@ -1,9 +1,10 @@
 {
-  "api": "api.env.cf-app.com",
+  "api": "api.bal.buildpacks-gcp.ci.cf-app.com",
   "admin_user": "admin",
-  "admin_password": "admin",
-  "apps_domain": "env.cf-app.com",
+  "admin_password": "v3rj1co1lbttq161ihq0",
+  "apps_domain": "bal.buildpacks-gcp.ci.cf-app.com",
   "secure_address": "10.0.0.6:25555",
+  "credhub_mode": "assisted",
   "num_windows_cells": 1,
   "skip_ssl_validation": true,
   "consul_mutual_tls": false,
