@@ -240,7 +240,7 @@ echo   web: webapp.exe
 					Expect(appEnv).To(ContainSubstring("credhub-ref"), "credhub-ref not found")
 				})
 
-				FIt("the bound app gets CredHub refs in VCAP_SERVICES interpolated", func() {
+				It("the bound app gets CredHub refs in VCAP_SERVICES interpolated", func() {
 					curlCmd := helpers.CurlSkipSSL(true, appURL+"/env/VCAP_SERVICES").Wait(DEFAULT_TIMEOUT)
 					Expect(curlCmd).To(Exit(0))
 
