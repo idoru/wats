@@ -20,6 +20,7 @@ import (
 )
 
 type Config interface {
+	GetStack() string
 	GetAppsDomain() string
 	GetAdminUser() string
 	GetAdminPassword() string
@@ -118,7 +119,6 @@ var _ = CredhubDescribe("CredHub Integration", func() {
 			tmpdir string
 		)
 		BeforeEach(func() {
-			Skip("Ignore this")
 			workflowhelpers.AsUser(environment.AdminUserContext(), DEFAULT_TIMEOUT, func() {
 				buildpackName = generator.PrefixedRandomName("WATS", "BPK")
 				appName = generator.PrefixedRandomName("WATS", "APP")
@@ -134,45 +134,34 @@ var _ = CredhubDescribe("CredHub Integration", func() {
 
 				buildpackArchivePath = path.Join(buildpackPath, "buildpack.zip")
 
-				//TODO: make into windows bat/ps1
-				archive_helpers.CreateZipArchive("/tmp/ha.zip", []archive_helpers.ArchiveFile{
-					{
-						Name: "bin\\compile.bat",
-						Body: `echo COMPILING... really just dumping env...
-cmd /C set
-`,
-					},
-					{
-						Name: "bin\\detect.bat",
-						Body: `
-`,
-					},
-					{
-						Name: "bin\\release.bat", ////####vvv down here
-						Body: `echo ---
-echo config_vars:
-echo   PATH: bin:/usr/local/bin:/usr/bin:/bin
-echo   FROM_BUILD_PACK: "yes"
-echo default_process_types:
-echo   web: while true; do { echo -e 'HTTP/1.1 200 OK\r\n'; echo "hi from a simple admin buildpack"; } | nc -l \$PORT; done
-`,
-					},
-				})
 				archive_helpers.CreateZipArchive(buildpackArchivePath, []archive_helpers.ArchiveFile{
 					{
-						Name: "bin\\compile.bat",
+						Name: "bin/compile",
+						Body: "",
+					},
+					{
+						Name: "bin/detect",
+						Body: ``,
+					},
+					{
+						Name: "bin/compile.bat",
 						Body: `echo COMPILING... really just dumping env...
 cmd /C set
 `,
 					},
 					{
-						Name: "bin\\detect.bat",
-						Body: `
-`,
+						Name: "bin/detect.bat",
+						Body: ``,
 					},
+					// {
+					// 	Name: "bin/detect.ps1",
+					// 	Body: `echo detect.ps1
+					// `,
+					// },
 					{
-						Name: "bin\\release.bat", ////####vvv down here
-						Body: `echo ---
+						Name: "bin/release.bat", ////####vvv down here
+						Body: `@echo off
+echo ---
 echo config_vars:
 echo   PATH: bin:/usr/local/bin:/usr/bin:/bin
 echo   FROM_BUILD_PACK: "yes"
@@ -200,6 +189,7 @@ echo   web: while true; do { echo -e 'HTTP/1.1 200 OK\r\n'; echo "hi from a simp
 				"-m", "256m",
 				"-p", appPath,
 				"-d", config.GetAppsDomain(),
+				"-s", config.GetStack(),
 			).Wait(DEFAULT_TIMEOUT)).To(Exit(0))
 
 			bindServiceAndStartApp(appName)
@@ -259,6 +249,7 @@ echo   web: while true; do { echo -e 'HTTP/1.1 200 OK\r\n'; echo "hi from a simp
 					// 	"-m", "1024M",
 					// 	"-p", assets.NewAssets().CredHubEnabledApp,
 					// 	"-d", Config.GetAppsDomain(),
+					//  "-s", config.GetStack(),
 					// ).Wait(CF_PUSH_TIMEOUT)
 					// Expect(createApp).To(Exit(0), "failed creating credhub-enabled app")
 					bindServiceAndStartApp(appName)
