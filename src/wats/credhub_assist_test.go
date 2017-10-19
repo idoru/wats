@@ -10,8 +10,6 @@ import (
 	. "github.com/onsi/gomega/gbytes"
 	. "github.com/onsi/gomega/gexec"
 
-	"encoding/json"
-
 	archive_helpers "code.cloudfoundry.org/archiver/extractor/test_helper"
 	"github.com/cloudfoundry-incubator/cf-test-helpers/cf"
 	"github.com/cloudfoundry-incubator/cf-test-helpers/generator"
@@ -153,41 +151,31 @@ cmd /C set
 						Name: "bin/detect.bat",
 						Body: ``,
 					},
-					// {
-					// 	Name: "bin/detect.ps1",
-					// 	Body: `echo detect.ps1
-					// `,
-					// },
 					{
 						Name: "bin/release.bat", ////####vvv down here
 						Body: `@echo off
 echo ---
-echo config_vars:
-echo   PATH: bin:/usr/local/bin:/usr/bin:/bin
-echo   FROM_BUILD_PACK: "yes"
 echo default_process_types:
-echo   web: while true; do { echo -e 'HTTP/1.1 200 OK\r\n'; echo "hi from a simple admin buildpack"; } | nc -l \$PORT; done
+echo   web: webapp.exe
 `,
 					},
 				})
-				_, err = os.Create(path.Join(appPath, "some-file"))
+				_, err = os.Create(path.Join(appPath, "some-file")) ///maybe dont need
 				Expect(err).ToNot(HaveOccurred())
 
 				createBuildpack := cf.Cf("create-buildpack", buildpackName, buildpackArchivePath, "0").Wait(DEFAULT_TIMEOUT)
-				Expect(createBuildpack).Should(Exit())
-				Expect(string(createBuildpack.Out.Contents())).Should(Say("baloney"))
 				Expect(createBuildpack).Should(Exit(0))
 				Expect(createBuildpack).Should(Say("Creating"))
 				Expect(createBuildpack).Should(Say("OK"))
 				Expect(createBuildpack).Should(Say("Uploading"))
 				Expect(createBuildpack).Should(Say("OK"))
-
 			})
 			Expect(cf.Cf("push", appName,
 				"--no-start",
 				"-b", buildpackName,
 				"-m", "256m",
-				"-p", appPath,
+				"-p", "../../assets/webapp",
+				// "-p", appPath,
 				"-d", config.GetAppsDomain(),
 				"-s", config.GetStack(),
 			).Wait(DEFAULT_TIMEOUT)).To(Exit(0))
@@ -236,44 +224,6 @@ echo   web: while true; do { echo -e 'HTTP/1.1 200 OK\r\n'; echo "hi from a simp
 					Expect(unbindService).To(Exit(0), "failed unbinding app and service")
 
 					Expect(cf.Cf("delete", appName, "-f", "-r").Wait(CF_PUSH_TIMEOUT)).To(Exit(0))
-				})
-			})
-
-			NonAssistedCredhubDescribe("", func() {
-				BeforeEach(func() {
-					//TODO: Need .NET or binary which does credhub interpolation itself
-					// createApp := cf.Cf(
-					// 	"push", appName,
-					// 	"--no-start",
-					// 	"-b", Config.GetJavaBuildpackName(),
-					// 	"-m", "1024M",
-					// 	"-p", assets.NewAssets().CredHubEnabledApp,
-					// 	"-d", Config.GetAppsDomain(),
-					//  "-s", config.GetStack(),
-					// ).Wait(CF_PUSH_TIMEOUT)
-					// Expect(createApp).To(Exit(0), "failed creating credhub-enabled app")
-					bindServiceAndStartApp(appName)
-				})
-
-				It("the broker returns credhub-ref in the credentials block", func() {
-					appEnv := string(cf.Cf("env", appName).Wait(DEFAULT_TIMEOUT).Out.Contents())
-					Expect(appEnv).To(ContainSubstring("credentials"), "credential block missing from service")
-					Expect(appEnv).To(ContainSubstring("credhub-ref"), "credhub-ref not found")
-				})
-
-				It("the bound app retrieves the credentials for the ref from CredHub", func() {
-					curlCmd := helpers.CurlSkipSSL(true, appURL+"/test").Wait(DEFAULT_TIMEOUT)
-					Expect(curlCmd).To(Exit(0))
-
-					bytes := curlCmd.Out.Contents()
-					var response struct {
-						UserName string `json:"user-name"`
-						Password string `json:"password"`
-					}
-
-					json.Unmarshal(bytes, &response)
-					Expect(response.UserName).To(Equal("pinkyPie"))
-					Expect(response.Password).To(Equal("rainbowDash"))
 				})
 			})
 
