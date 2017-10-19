@@ -293,7 +293,7 @@ echo   web: while true; do { echo -e 'HTTP/1.1 200 OK\r\n'; echo "hi from a simp
 					bindServiceAndStartApp(appName)
 				})
 
-				FIt("the broker returns credhub-ref in the credentials block", func() {
+				It("the broker returns credhub-ref in the credentials block", func() {
 					appEnv := string(cf.Cf("env", appName).Wait(DEFAULT_TIMEOUT).Out.Contents())
 					Expect(appEnv).To(ContainSubstring("credentials"), "credential block missing from service")
 					Expect(appEnv).To(ContainSubstring("credhub-ref"), "credhub-ref not found")
