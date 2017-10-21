@@ -243,8 +243,8 @@ echo   web: webapp.exe
 					Expect(curlCmd).To(Exit(0))
 
 					bytes := curlCmd.Out.Contents()
-					Expect(string(bytes)).To(ContainSubstring(`"rainbowDash"`))
-					Expect(string(bytes)).To(ContainSubstring(`"pinkyPie"`))
+					Expect(string(bytes)).To(ContainSubstring(`rainbowDash`))
+					Expect(string(bytes)).To(ContainSubstring(`pinkyPie`))
 				})
 			})
 		})
