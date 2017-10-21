@@ -100,8 +100,6 @@ var _ = CredhubDescribe("CredHub Integration", func() {
 			Expect(bindService).To(Exit(0), "failed binding app to service")
 		})
 		appStartSession = cf.Cf("start", appName).Wait(CF_PUSH_TIMEOUT)
-		Expect(appStartSession).To(Exit())
-		Expect(string(appStartSession.Out.Contents())).To(Equal("baloney"))
 		Expect(appStartSession).To(Exit(0))
 	}
 
